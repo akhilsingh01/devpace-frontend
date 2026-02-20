@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Loader2, Mail, Lock, User as UserIcon, Shield } from 'lucide-react';
 import API from "../api/axios";
 
 export default function Profile() {
-  const navigate = useNavigate();
   const [user, setUser] = useState({
     username: "",
     email: "",
@@ -12,14 +11,10 @@ export default function Profile() {
   const [email, setEmail] = useState("");
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-
-  // Protect route
-  useEffect(() => {
-    const token = localStorage.getItem("access");
-    if (!token) {
-      navigate("/login");
-    }
-  }, [navigate]);
+  const [emailSuccess, setEmailSuccess] = useState(false);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   // Fetch profile
   useEffect(() => {
@@ -36,8 +31,36 @@ export default function Profile() {
     fetchProfile();
   }, []);
 
-  const handleUpdate = async (e) => {
+  // Email success timer
+  useEffect(() => {
+    let emailTimer;
+
+    if (emailSuccess) {
+      emailTimer = setTimeout(() => {
+        setEmailSuccess(false);
+      }, 3000);
+    }
+
+    return () => clearTimeout(emailTimer);
+  }, [emailSuccess]);
+
+  // Password success timer
+  useEffect(() => {
+    let passwordTimer;
+
+    if (passwordSuccess) {
+      passwordTimer = setTimeout(() => {
+        setPasswordSuccess(false);
+      }, 3000);
+    }
+
+    return () => clearTimeout(passwordTimer);
+  }, [passwordSuccess]);
+
+  // handle email change
+  const handleEmailChange = async (e) => {
     e.preventDefault();
+    setEmailLoading(true);
 
     try {
       const response = await API.put("profile/", {
@@ -45,14 +68,18 @@ export default function Profile() {
       });
 
       setUser(response.data);
-      alert("Email updated successfully");
+      setEmailSuccess(true);
     } catch (error) {
       console.error("Update failed");
+    } finally {
+      setEmailLoading(false);
     }
   };
 
+  // handle password change
   const handlePasswordChange = async (e) => {
     e.preventDefault();
+    setPasswordLoading(true);
 
     try {
       await API.post("change-password/", {
@@ -60,69 +87,137 @@ export default function Profile() {
         new_password: newPassword,
       });
 
-      alert("Password updated successfully");
+      setPasswordSuccess(true);
 
       setOldPassword("");
       setNewPassword("");
     } catch (error) {
       alert("Password update failed");
+    } finally {
+      setPasswordLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-100 p-8">
-      <h1 className="text-2xl font-bold mb-6">Profile</h1>
+    <div className="min-h-screen bg-gray-100">
+      <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-8">Profile</h1>
 
-      <div className="bg-white p-6 rounded shadow w-96">
-        <p className="mb-4">
-          <strong>Username:</strong> {user.username}
-        </p>
+        {/* Profile Information Card */}
+        <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
+          <div className="flex items-center gap-2 mb-6">
+            <UserIcon className="w-5 h-5 text-blue-600" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Profile Information
+            </h2>
+          </div>
 
-        <form onSubmit={handleUpdate}>
-          <label className="block mb-2">Email</label>
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-2 border rounded mb-4"
-          />
+          <div className="space-y-4 mb-6">
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2">
+                <UserIcon className="w-4 h-4 text-gray-500" />
+                Username
+              </label>
+              <input
+                type="text"
+                value={user.username}
+                readOnly
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50 text-gray-500 cursor-not-allowed"
+              />
+            </div>
 
-          <button
-            type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
-          >
-            Update Email
-          </button>
-        </form>
-        <div className="mt-8">
-          <h2 className="text-lg font-semibold mb-4">Change Password</h2>
+            <form onSubmit={handleEmailChange}>
+              <label
+                htmlFor="email"
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"
+              >
+                <Mail className="w-4 h-4 text-gray-500" />
+                Email
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition mb-4"
+              />
 
-          <form onSubmit={handlePasswordChange}>
-            <input
-              type="password"
-              placeholder="Old Password"
-              value={oldPassword}
-              onChange={(e) => setOldPassword(e.target.value)}
-              className="w-full p-2 border rounded mb-3"
-              required
-            />
+              <button
+                type="submit"
+                className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition font-medium disabled:bg-blue-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                disabled={emailLoading}
+              >
+                {emailLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+                {emailLoading ? "Updating..." : "Update Email"}
+              </button>
+            </form>
+            {emailSuccess && (
+              <p className="text-green-600 text-sm font-medium">
+                Email updated successfully!
+              </p>
+            )}
+          </div>
+        </div>
 
-            <input
-              type="password"
-              placeholder="New Password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full p-2 border rounded mb-4"
-              required
-            />
+        {/* Change Password Card */}
+        <div className="bg-white rounded-xl shadow-sm p-6">
+          <div className="flex items-center gap-2 mb-6">
+            <Shield className="w-5 h-5 text-red-600" />
+            <h2 className="text-xl font-semibold text-gray-900">
+              Change Password
+            </h2>
+          </div>
+
+          <form onSubmit={handlePasswordChange} className="space-y-4">
+            <div>
+              <label
+                htmlFor="oldPassword"
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"
+              >
+                <Lock className="w-4 h-4 text-gray-500" />
+                Old Password
+              </label>
+              <input
+                type="password"
+                placeholder="Old Password"
+                value={oldPassword}
+                onChange={(e) => setOldPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                required
+              />
+            </div>
+
+            <div>
+              <label
+                htmlFor="newPassword"
+                className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-2"
+              >
+                <Lock className="w-4 h-4 text-gray-500" />
+                New Password
+              </label>
+              <input
+                type="password"
+                placeholder="New Password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-600 focus:border-transparent outline-none transition"
+                required
+              />
+            </div>
 
             <button
               type="submit"
-              className="bg-red-600 text-white px-4 py-2 rounded"
+              className="w-full bg-red-600 text-white py-2.5 px-4 rounded-lg hover:bg-red-700 transition font-medium disabled:bg-red-400 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              disabled={passwordLoading}
             >
-              Change Password
+              {passwordLoading && <Loader2 className="w-4 h-4 animate-spin" />}
+              {passwordLoading ? "Changing..." : "Change Password"}
             </button>
           </form>
+          {passwordSuccess && (
+            <p className="text-green-600 text-sm font-medium mt-2">
+              Password changed successfully!
+            </p>
+          )}
         </div>
       </div>
     </div>
