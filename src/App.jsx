@@ -1,29 +1,45 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import "./App.css";
 import Register from "./pages/Register";
-import Dashboard from "./pages/Dashboard";
+import Home from "./pages/Home";
 import Login from "./pages/Login";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./components/ProtectedRoute";
+import Layout from "./components/Layout";
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
+    <>
       <Routes>
-        <Route path="" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Navigate to="/login" />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route
-          path="/dashboard"
+          path="/home"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <Layout>
+                <Home />
+              </Layout>
             </ProtectedRoute>
           }
         />
-        <Route path="/profile" element={<Profile />} />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Profile />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
       </Routes>
-    </div>
+      
+      <ToastContainer position="top-right" autoClose={3000} />
+    </>
   );
 }
 
