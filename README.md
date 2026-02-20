@@ -90,8 +90,8 @@ Production configuration uses environment-based API URLs and secure cookie handl
 
 ## Live Demo
 
-Frontend: [https://devpace-web.vercel.app  ](https://devpace-web.vercel.app/)
-Backend API(Render): [https://devpace-backend.onrender.com/api/](https://devpace-backend.onrender.com/api)
+- Frontend: [https://devpace-web.vercel.app](https://devpace-web.vercel.app/)
+- Backend API(Render): [https://devpace-backend.onrender.com/api/](https://devpace-backend.onrender.com/api)
 
 ## Backend Repository
 The backend is built using:
